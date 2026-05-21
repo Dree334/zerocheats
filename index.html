@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ByteForge Studios — Soluciones de Software Avanzadas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Rajdhani:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #d4a017;
+    --red-dim: #9a7010;
+    --red-glow: rgba(212,160,23,0.4);
+    --red-soft: rgba(212,160,23,0.12);
+    --bg: #060608;
+    --bg2: #0c0c10;
+    --bg3: #111118;
+    --glass: rgba(255,255,255,0.04);
+    --glass-border: rgba(255,255,255,0.08);
+    --text: #f0f0f5;
+    --text-dim: #8888aa;
+    --text-muted: #444466;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;overflow-x:hidden}
+  body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;font-size:16px;line-height:1.6;overflow-x:hidden}
+  ::-webkit-scrollbar{width:4px}
+  ::-webkit-scrollbar-track{background:var(--bg2)}
+  ::-webkit-scrollbar-thumb{background:var(--red);border-radius:2px}
+  #particle-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+
+  /* NAV */
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 2rem;height:64px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,6,8,0.7);backdrop-filter:blur(20px);border-bottom:1px solid rgba(212,160,23,0.15);transition:background .3s}
+  .nav-logo{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:900;color:var(--red);letter-spacing:0.15em;text-decoration:none;display:flex;align-items:center;gap:10px}
+  .nav-logo-icon{width:32px;height:32px;background:var(--red);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-size:.65rem;color:#fff;font-weight:900;flex-shrink:0}
+  .nav-links{display:flex;gap:2rem;list-style:none}
+  .nav-links a{color:var(--text-dim);text-decoration:none;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;font-weight:600;transition:color .2s;position:relative}
+  .nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--red);transition:width .3s}
+  .nav-links a:hover{color:var(--red)}
+  .nav-links a:hover::after{width:100%}
+  .nav-cta{background:var(--red);color:#fff;padding:.4rem 1.2rem;border-radius:2px;font-size:.8rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;transition:all .2s;box-shadow:0 0 16px var(--red-glow)}
+  .nav-cta:hover{background:#ff2438;box-shadow:0 0 28px var(--red-glow),0 0 60px rgba(212,160,23,0.2)}
+
+  section{position:relative;z-index:1}
+
+  /* HERO */
+  #hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:120px 2rem 80px;overflow:hidden}
+  .hero-bg-lines{position:absolute;inset:0;overflow:hidden;z-index:0}
+  .hero-bg-lines::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 60px,rgba(212,160,23,0.03) 60px,rgba(212,160,23,0.03) 61px),repeating-linear-gradient(90deg,transparent,transparent 60px,rgba(212,160,23,0.03) 60px,rgba(212,160,23,0.03) 61px)}
+  .hero-glow{position:absolute;top:20%;left:50%;transform:translateX(-50%);width:800px;height:400px;background:radial-gradient(ellipse,rgba(212,160,23,0.12) 0%,transparent 70%);pointer-events:none}
+  .hero-content{position:relative;z-index:2;max-width:900px}
+  .hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--red-soft);border:1px solid rgba(212,160,23,0.3);color:var(--red);padding:.35rem 1rem;border-radius:2px;font-size:.75rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:2rem;animation:fadeUp .8s ease both}
+  .hero-badge-dot{width:6px;height:6px;background:var(--red);border-radius:50%;animation:pulse 2s ease infinite}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 var(--red-glow)}50%{opacity:.7;box-shadow:0 0 0 6px transparent}}
+  .hero-title{font-family:'Orbitron',monospace;font-size:clamp(2.8rem,7vw,6rem);font-weight:900;line-height:1;letter-spacing:.05em;margin-bottom:1rem;animation:fadeUp .8s .15s ease both}
+  .hero-title .line1{display:block;color:var(--text)}
+  .hero-title .line2{display:block;color:var(--red);text-shadow:0 0 40px rgba(212,160,23,0.5),0 0 80px rgba(212,160,23,0.2)}
+  .hero-sub{font-size:1.1rem;color:var(--text-dim);font-weight:500;letter-spacing:.05em;max-width:600px;margin:0 auto 2.5rem;animation:fadeUp .8s .3s ease both}
+  .hero-buttons{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;animation:fadeUp .8s .45s ease both}
+  .btn-primary{background:var(--red);color:#fff;padding:.75rem 2rem;border:none;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .25s;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%);position:relative;overflow:hidden}
+  .btn-primary::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transform:translateX(-100%);transition:transform .4s}
+  .btn-primary:hover::before{transform:translateX(100%)}
+  .btn-primary:hover{background:#ff2438;box-shadow:0 0 30px var(--red-glow),0 0 60px rgba(212,160,23,0.15);transform:translateY(-2px)}
+  .btn-secondary{background:transparent;color:var(--text);padding:.75rem 2rem;border:1px solid rgba(255,255,255,0.15);cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:.9rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;text-decoration:none;display:inline-flex;align-items:center;gap:8px;transition:all .25s;clip-path:polygon(8px 0%,100% 0%,calc(100% - 8px) 100%,0% 100%)}
+  .btn-secondary:hover{border-color:var(--red);color:var(--red);box-shadow:0 0 20px var(--red-soft);transform:translateY(-2px)}
+  .hero-stats{display:flex;gap:3rem;justify-content:center;margin-top:4rem;animation:fadeUp .8s .6s ease both;flex-wrap:wrap}
+  .hero-stat{text-align:center}
+  .hero-stat-num{font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:700;color:var(--red)}
+  .hero-stat-label{font-size:.75rem;color:var(--text-muted);letter-spacing:.15em;text-transform:uppercase;font-weight:600}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+  /* SECTION HEADERS */
+  .section-header{text-align:center;margin-bottom:3.5rem}
+  .section-tag{display:inline-block;color:var(--red);font-size:.7rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;margin-bottom:.75rem;font-family:'JetBrains Mono',monospace}
+  .section-title{font-family:'Orbitron',monospace;font-size:clamp(1.6rem,3vw,2.4rem);font-weight:700;color:var(--text);letter-spacing:.05em}
+  .section-title span{color:var(--red)}
+  .section-line{width:60px;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);margin:1rem auto 0}
+
+  /* DOWNLOADS */
+  #downloads{padding:100px 2rem}
+  .container{max-width:1200px;margin:0 auto}
+  .tabs{display:flex;gap:4px;justify-content:center;margin-bottom:2.5rem;flex-wrap:wrap}
+  .tab{background:transparent;border:1px solid var(--glass-border);color:var(--text-dim);padding:.5rem 1.5rem;cursor:pointer;font-family:'Rajdhani',sans-serif;font-size:.85rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;transition:all .2s}
+  .tab.active,.tab:hover{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+  .cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:1.5rem}
+  .dl-card{background:var(--glass);border:1px solid var(--glass-border);padding:1.5rem;position:relative;overflow:hidden;transition:all .3s;cursor:pointer}
+  .dl-card::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);opacity:0;transition:opacity .3s}
+  .dl-card:hover{background:rgba(212,160,23,0.06);border-color:rgba(212,160,23,0.4);transform:translateY(-4px);box-shadow:0 8px 40px rgba(212,160,23,0.15),0 0 0 1px rgba(212,160,23,0.2)}
+  .dl-card:hover::after{opacity:1}
+  .dl-card-icon{width:56px;height:56px;background:var(--red-soft);border:1px solid rgba(212,160,23,0.3);display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1rem;position:relative}
+  .dl-card-icon-inner{font-family:'Orbitron',monospace;font-size:.7rem;font-weight:900;color:var(--red)}
+  .dl-card-badge{position:absolute;top:1rem;right:1rem;background:var(--red);color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.1em;padding:.15rem .5rem;font-family:'JetBrains Mono',monospace}
+  .dl-card-name{font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:.3rem;letter-spacing:.05em}
+  .dl-card-version{font-size:.75rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-bottom:.75rem}
+  .dl-card-desc{font-size:.875rem;color:var(--text-dim);line-height:1.5;margin-bottom:1.25rem}
+  .dl-card-meta{display:flex;gap:1rem;margin-bottom:1.25rem}
+  .dl-meta-item{font-size:.7rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:4px}
+  .dl-meta-item::before{content:'';width:4px;height:4px;background:var(--red);display:inline-block}
+  .btn-dl{width:100%;background:transparent;border:1px solid rgba(212,160,23,0.4);color:var(--red);padding:.6rem;font-family:'Rajdhani',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+  .btn-dl::before{content:'';position:absolute;inset:0;background:var(--red);transform:scaleX(0);transform-origin:left;transition:transform .3s}
+  .btn-dl:hover::before{transform:scaleX(1)}
+  .btn-dl span{position:relative;z-index:1}
+  .btn-dl:hover span{color:#fff}
+
+  /* SOCIAL */
+  #social{padding:80px 2rem;background:linear-gradient(180deg,transparent,var(--bg2),transparent)}
+  .social-grid{display:flex;gap:1.25rem;justify-content:center;flex-wrap:wrap}
+  .social-card{display:flex;flex-direction:column;align-items:center;gap:.75rem;padding:1.5rem 2rem;background:var(--glass);border:1px solid var(--glass-border);cursor:pointer;transition:all .3s;text-decoration:none;color:var(--text-dim);min-width:100px}
+  .social-card:hover{border-color:var(--red);color:var(--red);transform:translateY(-4px);box-shadow:0 8px 30px rgba(212,160,23,0.2)}
+  .social-icon{width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;transition:all .3s}
+  .social-label{font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+  .social-card:hover .social-icon{filter:drop-shadow(0 0 8px var(--red))}
+
+  /* INFO */
+  #info{padding:100px 2rem}
+  .info-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem}
+  .info-card{background:var(--glass);border:1px solid var(--glass-border);padding:2rem;transition:all .3s;position:relative;overflow:hidden}
+  .info-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,transparent,var(--red),transparent);opacity:0;transition:opacity .3s}
+  .info-card:hover{background:rgba(212,160,23,0.04);border-color:rgba(212,160,23,0.25);transform:translateY(-3px)}
+  .info-card:hover::before{opacity:1}
+  .info-card-icon{font-size:2rem;margin-bottom:1rem;display:block}
+  .info-card-title{font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;color:var(--text);margin-bottom:.75rem;letter-spacing:.05em}
+  .info-card-text{font-size:.9rem;color:var(--text-dim);line-height:1.7}
+
+  /* FEATURES */
+  #features{padding:100px 2rem;background:var(--bg2)}
+  .features-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}
+  .feat-card{background:var(--bg3);border:1px solid var(--glass-border);padding:1.75rem;text-align:center;transition:all .3s;position:relative;overflow:hidden}
+  .feat-card::after{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(212,160,23,0.08),transparent 60%);opacity:0;transition:opacity .3s}
+  .feat-card:hover{border-color:rgba(212,160,23,0.4);box-shadow:0 0 30px rgba(212,160,23,0.1);transform:translateY(-3px)}
+  .feat-card:hover::after{opacity:1}
+  .feat-icon{font-size:2.5rem;margin-bottom:1rem;display:block;filter:grayscale(1);transition:filter .3s}
+  .feat-card:hover .feat-icon{filter:none}
+  .feat-title{font-family:'Orbitron',monospace;font-size:.8rem;font-weight:700;color:var(--text);letter-spacing:.08em;margin-bottom:.5rem}
+  .feat-desc{font-size:.8rem;color:var(--text-dim);line-height:1.5}
+  .feat-bar{width:40px;height:2px;background:var(--red);margin:.75rem auto 0;transform:scaleX(0);transition:transform .3s}
+  .feat-card:hover .feat-bar{transform:scaleX(1)}
+
+  /* DISCORD */
+  #discord{padding:100px 2rem}
+  .discord-card{max-width:780px;margin:0 auto;background:linear-gradient(135deg,var(--bg3) 0%,rgba(88,101,242,0.08) 100%);border:1px solid rgba(88,101,242,0.25);padding:3rem;text-align:center;position:relative;overflow:hidden}
+  .discord-card::before{content:'';position:absolute;top:-100px;right:-100px;width:300px;height:300px;background:radial-gradient(circle,rgba(88,101,242,0.15),transparent 70%);pointer-events:none}
+  .discord-card::after{content:'';position:absolute;bottom:-80px;left:-80px;width:250px;height:250px;background:radial-gradient(circle,rgba(212,160,23,0.1),transparent 70%);pointer-events:none}
+  .discord-logo{font-size:3.5rem;margin-bottom:1rem;display:block}
+  .discord-title{font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:700;color:var(--text);margin-bottom:.5rem}
+  .discord-sub{color:var(--text-dim);margin-bottom:1.5rem;font-size:1rem}
+  .discord-stats{display:flex;gap:2.5rem;justify-content:center;margin-bottom:2rem;flex-wrap:wrap}
+  .discord-stat{display:flex;align-items:center;gap:.5rem;font-size:.9rem;font-weight:600}
+  .stat-dot{width:8px;height:8px;border-radius:50%}
+  .stat-dot.online{background:#23d18b;box-shadow:0 0 8px rgba(35,209,139,0.6)}
+  .stat-dot.total{background:var(--text-muted)}
+  .btn-discord{display:inline-flex;align-items:center;gap:.75rem;background:#5865f2;color:#fff;padding:.85rem 2.5rem;font-family:'Rajdhani',sans-serif;font-size:1rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;transition:all .25s;border:none;cursor:pointer}
+  .btn-discord:hover{background:#6875f5;transform:translateY(-2px);box-shadow:0 8px 30px rgba(88,101,242,0.4)}
+
+  /* ===================== DEPENDENCIES SECTION ===================== */
+  #dependencies{padding:100px 2rem;background:var(--bg2)}
+
+  .dep-warning{display:flex;gap:1rem;align-items:flex-start;background:rgba(212,160,23,0.07);border:1px solid rgba(212,160,23,0.25);padding:1.25rem 1.5rem;margin-bottom:2.5rem}
+  .dep-warning-icon{color:var(--red);flex-shrink:0;margin-top:2px}
+  .dep-warning-title{font-family:'Orbitron',monospace;font-size:.8rem;font-weight:700;color:var(--red);letter-spacing:.08em;margin-bottom:.3rem}
+  .dep-warning-text{font-size:.875rem;color:var(--text-dim);line-height:1.6}
+
+  .dep-blocks{display:flex;flex-direction:column;gap:1.5rem}
+
+  .dep-block{background:var(--bg3);border:1px solid var(--glass-border);padding:1.75rem 2rem;position:relative;overflow:hidden;transition:border-color .3s}
+  .dep-block::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);opacity:0;transition:opacity .3s}
+  .dep-block:hover{border-color:rgba(212,160,23,0.3)}
+  .dep-block:hover::before{opacity:1}
+
+  .dep-block-header{display:flex;align-items:center;gap:.75rem;margin-bottom:1rem}
+  .dep-block-num{font-family:'Orbitron',monospace;font-size:.7rem;font-weight:900;color:var(--red);background:var(--red-soft);border:1px solid rgba(212,160,23,0.3);width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .dep-block-title{font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;color:var(--text);letter-spacing:.05em}
+  .dep-block-desc{font-size:.875rem;color:var(--text-dim);line-height:1.6;margin-bottom:1.5rem}
+
+  .dep-inner-box{background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);padding:1.25rem 1.5rem;margin-bottom:1rem}
+  .dep-inner-label{display:flex;align-items:center;gap:.5rem;font-size:.75rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-dim);margin-bottom:1rem;font-family:'JetBrains Mono',monospace}
+  .dep-inner-label svg{color:var(--text-muted)}
+
+  .dep-steps{display:flex;flex-direction:column;gap:1rem}
+  .dep-step{display:flex;gap:1rem;align-items:flex-start}
+  .dep-step-num{width:28px;height:28px;background:rgba(212,160,23,0.15);border:1px solid rgba(212,160,23,0.3);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:.65rem;font-weight:900;color:var(--red);flex-shrink:0}
+  .dep-step-title{font-size:.875rem;font-weight:700;color:var(--text);margin-bottom:.2rem}
+  .dep-step-text{font-size:.825rem;color:var(--text-muted);line-height:1.5}
+
+  .dep-divider{display:flex;align-items:center;gap:1rem;margin:1.25rem 0}
+  .dep-divider-line{flex:1;height:1px;background:var(--glass-border)}
+  .dep-divider-label{font-family:'Orbitron',monospace;font-size:.65rem;font-weight:900;color:var(--red);letter-spacing:.2em}
+
+  .dep-btn{display:inline-flex;align-items:center;gap:.5rem;background:var(--red);color:#fff;padding:.6rem 1.25rem;font-family:'Rajdhani',sans-serif;font-size:.8rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;text-decoration:none;transition:all .25s;margin-top:.5rem;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%)}
+  .dep-btn:hover{background:#ff2438;box-shadow:0 0 20px var(--red-glow);transform:translateY(-1px)}
+  /* ============================================================== */
+
+  /* FOOTER */
+  footer{background:var(--bg2);border-top:1px solid var(--glass-border);padding:3rem 2rem 2rem}
+  .footer-inner{max-width:1200px;margin:0 auto}
+  .footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:3rem;margin-bottom:3rem}
+  .footer-brand-name{font-family:'Orbitron',monospace;font-size:1rem;font-weight:900;color:var(--red);letter-spacing:.15em;display:flex;align-items:center;gap:10px;margin-bottom:.75rem}
+  .footer-brand-icon{width:28px;height:28px;background:var(--red);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);flex-shrink:0}
+  .footer-tagline{font-size:.85rem;color:var(--text-muted);line-height:1.6;max-width:260px}
+  .footer-col-title{font-family:'Orbitron',monospace;font-size:.7rem;font-weight:700;color:var(--red);letter-spacing:.2em;text-transform:uppercase;margin-bottom:1rem}
+  .footer-links{list-style:none;display:flex;flex-direction:column;gap:.5rem}
+  .footer-links a{color:var(--text-muted);font-size:.875rem;text-decoration:none;transition:color .2s;font-weight:500}
+  .footer-links a:hover{color:var(--red)}
+  .footer-sep{height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);margin-bottom:2rem}
+  .footer-bottom{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+  .footer-copy{font-size:.8rem;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+  .footer-socials{display:flex;gap:.75rem}
+  .footer-social{width:32px;height:32px;background:var(--glass);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;font-size:.85rem;color:var(--text-muted);text-decoration:none;transition:all .2s}
+  .footer-social:hover{border-color:var(--red);color:var(--red);box-shadow:0 0 12px var(--red-soft)}
+
+  .reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.visible{opacity:1;transform:translateY(0)}
+  .section-sep{height:1px;background:linear-gradient(90deg,transparent,var(--glass-border),transparent);margin:0}
+
+  .neon-line{position:absolute;pointer-events:none;overflow:hidden}
+  .neon-line-h{height:1px;background:linear-gradient(90deg,transparent,var(--red),transparent);animation:neonSweepH 6s linear infinite}
+  @keyframes neonSweepH{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+  @keyframes glitch{0%,94%,100%{clip-path:none;transform:none}95%{clip-path:polygon(0 20%,100% 20%,100% 25%,0 25%);transform:translate(-2px,0)}96%{clip-path:polygon(0 65%,100% 65%,100% 70%,0 70%);transform:translate(2px,0)}97%{clip-path:polygon(0 45%,100% 45%,100% 50%,0 50%);transform:translate(-1px,0)}98%{clip-path:none;transform:none}}
+  .hero-title .line2{animation:glitch 8s ease infinite}
+
+  @media(max-width:768px){nav{padding:0 1rem}.nav-links{display:none}.footer-top{grid-template-columns:1fr 1fr}.hero-stats{gap:1.5rem}.discord-stats{gap:1.5rem}.dep-block{padding:1.25rem}}
+  @media(max-width:480px){.footer-top{grid-template-columns:1fr}.hero-buttons{flex-direction:column;align-items:center}}
+</style>
+</head>
+<body>
+
+<canvas id="particle-canvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">ZC</div>
+    ZEROCHEATS
+  </a>
+  <ul class="nav-links">
+    <li><a href="#downloads">Descargas</a></li>
+    <li><a href="#dependencies">Configuración</a></li>
+    <li><a href="#features">Funciones</a></li>
+    <li><a href="#info">Nosotros</a></li>
+    <li><a href="#discord">Comunidad</a></li>
+  </ul>
+  <a href="#discord" class="nav-cta">Únete</a>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg-lines"></div>
+  <div class="hero-glow"></div>
+  <div class="neon-line neon-line-h" style="top:30%;left:0;right:0;width:100%"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <span class="hero-badge-dot"></span>
+      Sistema Activo — Todos los Servicios Operativos
+    </div>
+    <h1 class="hero-title">
+      <span class="line1">ZERO</span>
+      <span class="line2">CHEATS</span>
+    </h1>
+    <p class="hero-sub">Soluciones de Software Avanzadas &amp; Herramientas Profesionales para la Nueva Generación</p>
+    <div class="hero-buttons">
+      <a href="#downloads" class="btn-primary">⬇ Descargar Paneles</a>
+      <a href="#downloads" class="btn-primary">🛡 Descargar Bypass</a>
+      <a href="#discord" class="btn-secondary">⚡ Unirse a la Comunidad</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-num">50K+</div><div class="hero-stat-label">Usuarios Activos</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">99.9%</div><div class="hero-stat-label">Disponibilidad</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">12+</div><div class="hero-stat-label">Productos</div></div>
+      <div class="hero-stat"><div class="hero-stat-num">24/7</div><div class="hero-stat-label">Soporte</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="section-sep"></div>
+
+<!-- DOWNLOADS -->
+<section id="downloads">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">// Descargas</div>
+      <h2 class="section-title">ARSENAL DE <span>SOFTWARE</span></h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="tabs reveal">
+      <button class="tab active">Todo</button>
+      <button class="tab">Paneles</button>
+      <button class="tab">Herramientas Bypass</button>
+      <button class="tab">Utilidades</button>
+      <button class="tab">Actualizaciones</button>
+    </div>
+    <div class="cards-grid">
+      <div class="dl-card reveal">
+        <div class="dl-card-badge">NEW</div>
+        <div class="dl-card-icon"><div class="dl-card-icon-inner">BFP</div></div>
+        <div class="dl-card-name">ByteForge Panel</div>
+        <div class="dl-card-version">v3.2.1 — Suite de Panel</div>
+        <div class="dl-card-desc">Panel de control avanzado con monitoreo en tiempo real, gestión multi-instancia y pipelines de despliegue automatizados.</div>
+        <div class="dl-card-meta"><div class="dl-meta-item">148 MB</div><div class="dl-meta-item">Win/Mac/Linux</div></div>
+        <button class="btn-dl"><span>⬇ Descargar</span></button>
+      </div>
+      <div class="dl-card reveal">
+        <div class="dl-card-badge">HOT</div>
+        <div class="dl-card-icon"><div class="dl-card-icon-inner">BFB</div></div>
+        <div class="dl-card-name">ByteForge Bypass</div>
+        <div class="dl-card-version">v2.8.0 — Suite de Seguridad</div>
+        <div class="dl-card-desc">Kit de auditoría de seguridad y pruebas de penetración de grado profesional. Diseñado para uso autorizado por profesionales certificados.</div>
+        <div class="dl-card-meta"><div class="dl-meta-item">92 MB</div><div class="dl-meta-item">Windows</div></div>
+        <button class="btn-dl"><span>⬇ Descargar</span></button>
+      </div>
+      <div class="dl-card reveal">
+        <div class="dl-card-icon"><div class="dl-card-icon-inner">TKT</div></div>
+        <div class="dl-card-name">ByteForge Toolkit</div>
+        <div class="dl-card-version">v5.0.4 — Pack de Utilidades</div>
+        <div class="dl-card-desc">Kit de herramientas todo-en-uno con análisis de código, perfilado de rendimiento y frameworks de pruebas automatizadas.</div>
+        <div class="dl-card-meta"><div class="dl-meta-item">210 MB</div><div class="dl-meta-item">Cross-platform</div></div>
+        <button class="btn-dl"><span>⬇ Descargar</span></button>
+      </div>
+      <div class="dl-card reveal">
+        <div class="dl-card-icon"><div class="dl-card-icon-inner">LDR</div></div>
+        <div class="dl-card-name">Loader Utility</div>
+        <div class="dl-card-version">v1.4.2 — Herramienta de Inicio</div>
+        <div class="dl-card-desc">Cargador de aplicaciones liviano con inyección de dependencias, recarga en caliente de módulos y configuración de entorno.</div>
+        <div class="dl-card-meta"><div class="dl-meta-item">18 MB</div><div class="dl-meta-item">All Platforms</div></div>
+        <button class="btn-dl"><span>⬇ Descargar</span></button>
+      </div>
+      <div class="dl-card reveal">
+        <div class="dl-card-badge">BETA</div>
+        <div class="dl-card-icon"><div class="dl-card-icon-inner">CLD</div></div>
+        <div class="dl-card-name">Cloud Sync Pro</div>
+        <div class="dl-card-version">v0.9.1 — Versión Beta</div>
+        <div class="dl-card-desc">Sincronización en la nube en tiempo real con cifrado de extremo a extremo, sincronización delta y redundancia multi-región.</div>
+        <div class="dl-card-meta"><div class="dl-meta-item">64 MB</div><div class="dl-meta-item">Win/Mac</div></div>
+        <button class="btn-dl"><span>⬇ Descargar</span></button>
+      </div>
+      <div class="dl-card reveal">
+        <div class="dl-card-icon"><div class="dl-card-icon-inner">SCN</div></div>
+        <div class="dl-card-name">SecureNet Scanner</div>
+        <div class="dl-card-version">v3.1.0 — Herramientas de Red</div>
+        <div class="dl-card-desc">Escáner de seguridad de red completo con detección de vulnerabilidades, análisis de puertos e informes automatizados.</div>
+        <div class="dl-card-meta"><div class="dl-meta-item">77 MB</div><div class="dl-meta-item">Windows/Linux</div></div>
+        <button class="btn-dl"><span>⬇ Descargar</span></button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="section-sep"></div>
+
+<!-- DEPENDENCIES (from HyperV) -->
+<section id="dependencies">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">// Configuración</div>
+      <h2 class="section-title">DEPENDENCIAS <span>GENERALES</span></h2>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="dep-warning reveal">
+      <div class="dep-warning-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      </div>
+      <div>
+        <div class="dep-warning-title">Instala todo antes de usar cualquier producto</div>
+        <div class="dep-warning-text">Estas dependencias son necesarias para evitar errores DLL, crashes y problemas de ejecución. Sigue todos los pasos en orden.</div>
+      </div>
+    </div>
+
+    <div class="dep-blocks">
+
+      <!-- Block 1: Desactivar Windows Defender -->
+      <div class="dep-block reveal">
+        <div class="dep-block-header">
+          <div class="dep-block-num">01</div>
+          <div class="dep-block-title">Desactivar Windows Defender</div>
+        </div>
+        <div class="dep-block-desc">Debes desactivar Windows Defender antes de ejecutar cualquier producto. Esto evita falsos positivos y bloqueos.</div>
+
+        <div class="dep-inner-box">
+          <div class="dep-inner-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+            Método Manual
+          </div>
+          <div class="dep-steps">
+            <div class="dep-step">
+              <div class="dep-step-num">1</div>
+              <div>
+                <div class="dep-step-title">Abrir Seguridad de Windows</div>
+                <div class="dep-step-text">Presiona Inicio y escribe "Seguridad de Windows". Abre la app.</div>
+              </div>
+            </div>
+            <div class="dep-step">
+              <div class="dep-step-num">2</div>
+              <div>
+                <div class="dep-step-title">Virus & Threat Protection</div>
+                <div class="dep-step-text">Ve a "Protección contra virus y amenazas" → "Administrar configuración".</div>
+              </div>
+            </div>
+            <div class="dep-step">
+              <div class="dep-step-num">3</div>
+              <div>
+                <div class="dep-step-title">Desactivar Protecciones</div>
+                <div class="dep-step-text">Desactiva "Protección en tiempo real" y "Protección contra alteraciones".</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dep-divider">
+          <div class="dep-divider-line"></div>
+          <div class="dep-divider-label">THEN</div>
+          <div class="dep-divider-line"></div>
+        </div>
+
+        <div class="dep-inner-box">
+          <div class="dep-inner-label">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--red)"><path d="M20 6 9 17l-5-5"/></svg>
+            Desactivar con dControl (Recomendado)
+          </div>
+          <div class="dep-steps">
+            <div class="dep-step">
+              <div class="dep-step-num">1</div>
+              <div>
+                <div class="dep-step-title">Descargar dControl</div>
+                <a href="https://www.realhostx.com/Cloud/tanatozn/dControl (1).rar" target="_blank" rel="noopener noreferrer" class="dep-btn">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                  Descargar dControl
+                </a>
+              </div>
+            </div>
+            <div class="dep-step">
+              <div class="dep-step-num">2</div>
+              <div>
+                <div class="dep-step-title">Ejecutar y Desactivar</div>
+                <div class="dep-step-text">Open dControl and press "Desactivar Windows Defender". The button should turn red confirming it's disabled.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Block 2: Visual C++ & DirectX -->
+      <div class="dep-block reveal">
+        <div class="dep-block-header">
+          <div class="dep-block-num">02</div>
+          <div class="dep-block-title">Visual C++ Redistributables &amp; DirectX Runtime</div>
+        </div>
+        <div class="dep-block-desc">Instala estos para evitar errores DLL o crashes. Necesario para renderizado gráfico y compatibilidad del sistema.</div>
+        <div class="dep-steps">
+          <div class="dep-step">
+            <div class="dep-step-num">1</div>
+            <div>
+              <div class="dep-step-title">Descargar el Paquete</div>
+              <a href="https://mega.nz/file/N1xTTARA#WxtglCiFrvoyQVmDc2Ib-oWtIOu7kbhloiK825_cPQg" target="_blank" rel="noopener noreferrer" class="dep-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                Descargar Aquí
+              </a>
+            </div>
+          </div>
+          <div class="dep-step">
+            <div class="dep-step-num">2</div>
+            <div>
+              <div class="dep-step-title">Instalar</div>
+              <div class="dep-step-text">Extrae el archivo, haz clic derecho en <strong style="color:var(--text)">install_all.bat</strong> y ejecuta como Administrador. Desmarca Bing Bar durante la instalación. Reinicia el PC al terminar.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="section-sep"></div>
+
+<!-- SOCIAL -->
+<section id="social">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">// Conectar</div>
+      <h2 class="section-title">ENCUÉNTRANOS <span>EN TODAS PARTES</span></h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="social-grid reveal">
+      <a href="https://discord.com" target="_blank" class="social-card">
+        <div class="social-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.031.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg></div>
+        <div class="social-label">Discord</div>
+      </a>
+      <a href="https://youtube.com" target="_blank" class="social-card">
+        <div class="social-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></div>
+        <div class="social-label">YouTube</div>
+      </a>
+      <a href="https://tiktok.com" target="_blank" class="social-card">
+        <div class="social-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.82a8.18 8.18 0 0 0 4.78 1.52V6.9a4.85 4.85 0 0 1-1.01-.21z"/></svg></div>
+        <div class="social-label">TikTok</div>
+      </a>
+      <a href="https://instagram.com" target="_blank" class="social-card">
+        <div class="social-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></div>
+        <div class="social-label">Instagram</div>
+      </a>
+      <a href="https://github.com" target="_blank" class="social-card">
+        <div class="social-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></div>
+        <div class="social-label">GitHub</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="section-sep"></div>
+
+<!-- INFO -->
+<section id="info">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">// Nosotros</div>
+      <h2 class="section-title">QUIÉNES <span>SOMOS</span></h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="info-grid">
+      <div class="info-card reveal"><span class="info-card-icon">🏢</span><div class="info-card-title">Sobre ByteForge Studios</div><div class="info-card-text">Fundado por un equipo de ingenieros de élite e investigadores de seguridad, ByteForge Studios ofrece soluciones de software de vanguardia en las que confían profesionales de todo el mundo.</div></div>
+      <div class="info-card reveal"><span class="info-card-icon">🔐</span><div class="info-card-title">Seguridad y Rendimiento</div><div class="info-card-text">Cada producto se construye con arquitectura de seguridad primero. Auditorías rigurosas, pruebas de penetración y principios de diseño zero-trust garantizan que tus operaciones estén protegidas.</div></div>
+      <div class="info-card reveal"><span class="info-card-icon">⚡</span><div class="info-card-title">Actualizaciones Frecuentes</div><div class="info-card-text">Nuestro pipeline CI/CD entrega parches semanales y versiones mayores mensuales. Iteramos rápido basándonos en el feedback de la comunidad, manteniendo todas las herramientas a la vanguardia.</div></div>
+      <div class="info-card reveal"><span class="info-card-icon">🌐</span><div class="info-card-title">Community Soporte</div><div class="info-card-text">Únete a más de 50.000 profesionales en nuestra comunidad de Discord. Obtén soporte técnico, comparte descubrimientos, colabora en proyectos y accede a programas beta exclusivos.</div></div>
+      <div class="info-card reveal"><span class="info-card-icon">👨‍💻</span><div class="info-card-title">Equipo de Desarrollo Profesional</div><div class="info-card-text">Nuestro equipo de más de 40 desarrolladores abarca 15 países, combinando experiencia en programación de sistemas, computación distribuida, criptografía y diseño UX.</div></div>
+      <div class="info-card reveal"><span class="info-card-icon">📈</span><div class="info-card-title">Historial Comprobado</div><div class="info-card-text">Desde 2019, ByteForge Studios ha lanzado 12 productos importantes con un récord combinado de disponibilidad del 99,9%, ganando reconocimiento de analistas de la industria a nivel mundial.</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="section-sep"></div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">// Capacidades</div>
+      <h2 class="section-title">FUNCIONES <span>PRINCIPALES</span></h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card reveal"><span class="feat-icon">⚡</span><div class="feat-title">Alto Rendimiento</div><div class="feat-desc">Binarios nativos optimizados con tiempos de respuesta por debajo del milisegundo y mínimo uso de memoria</div><div class="feat-bar"></div></div>
+      <div class="feat-card reveal"><span class="feat-icon">📡</span><div class="feat-title">Descargas Rápidas</div><div class="feat-desc">Distribuido por CDN en más de 40 nodos globales para máximo rendimiento desde cualquier lugar</div><div class="feat-bar"></div></div>
+      <div class="feat-card reveal"><span class="feat-icon">🔒</span><div class="feat-title">Sistemas Seguros</div><div class="feat-desc">Cifrado AES-256, módulos de seguridad por hardware y arquitectura zero-knowledge en todo el sistema</div><div class="feat-bar"></div></div>
+      <div class="feat-card reveal"><span class="feat-icon">☁</span><div class="feat-title">Integración en la Nube</div><div class="feat-desc">Conectores nativos para AWS, Azure, GCP con sincronización en tiempo real y failover multi-región</div><div class="feat-bar"></div></div>
+      <div class="feat-card reveal"><span class="feat-icon">🛠</span><div class="feat-title">Herramientas Optimizadas</div><div class="feat-desc">Cada utilidad es perfilada, evaluada y refinada para máxima eficiencia en producción</div><div class="feat-bar"></div></div>
+      <div class="feat-card reveal"><span class="feat-icon">🎛</span><div class="feat-title">Interfaz Profesional</div><div class="feat-desc">Interfaz diseñada con precisión con atajos de teclado, modo oscuro y layouts totalmente personalizables</div><div class="feat-bar"></div></div>
+    </div>
+  </div>
+</section>
+
+<div class="section-sep"></div>
+
+<!-- DISCORD -->
+<section id="discord">
+  <div class="container">
+    <div class="section-header reveal">
+      <div class="section-tag">// Comunidad</div>
+      <h2 class="section-title">ÚNETE A LA <span>COMUNIDAD</span></h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="discord-card reveal">
+      <div class="discord-logo"><svg width="56" height="56" viewBox="0 0 24 24" fill="#5865f2"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.031.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg></div>
+      <h3 class="discord-title">Centro de la Comunidad ByteForge</h3>
+      <p class="discord-sub">Únete a miles de profesionales, desarrolladores y entusiastas. Obtén soporte, comparte conocimiento y mantente al día con cada lanzamiento.</p>
+      <div class="discord-stats">
+        <div class="discord-stat"><div class="stat-dot online"></div><span style="color:#23d18b;font-family:'JetBrains Mono',monospace;font-size:.9rem">3.847 En línea</span></div>
+        <div class="discord-stat"><div class="stat-dot total"></div><span style="color:var(--text-dim);font-family:'JetBrains Mono',monospace;font-size:.9rem">52.100 Miembros</span></div>
+      </div>
+      <a href="https://discord.com" target="_blank" class="btn-discord">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.031.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+        Únete a Nuestro Servidor de Discord
+      </a>
+    </div>
+  </div>
+</section>
+
+<div class="section-sep"></div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-brand-name"><div class="footer-brand-icon"></div>BYTEFORGE STUDIOS</div>
+        <p class="footer-tagline">Soluciones de software avanzadas y herramientas profesionales para desarrolladores y profesionales de seguridad en todo el mundo.</p>
+      </div>
+      <div>
+        <div class="footer-col-title">Productos</div>
+        <ul class="footer-links"><li><a href="#">BF Panel v3</a></li><li><a href="#">BF Bypass</a></li><li><a href="#">BF Toolkit</a></li><li><a href="#">Loader Utility</a></li><li><a href="#">Cloud Sync Pro</a></li></ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Empresa</div>
+        <ul class="footer-links"><li><a href="#">Sobre Nosotros</a></li><li><a href="#">Cambios</a></li><li><a href="#">Blog</a></li><li><a href="#">Empleos</a></li><li><a href="#">Contacto</a></li></ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Legal</div>
+        <ul class="footer-links"><li><a href="#">Términos de Servicio</a></li><li><a href="#">Política de Privacidad</a></li><li><a href="#">Política de Cookies</a></li><li><a href="#">Licencias</a></li><li><a href="#">DMCA</a></li></ul>
+      </div>
+    </div>
+    <div class="footer-sep"></div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 ByteForge Studios. Todos los derechos reservados. — Construido con precisión.</div>
+      <div class="footer-socials">
+        <a href="https://discord.com" target="_blank" class="footer-social" title="Discord"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057c.002.022.015.043.031.056a19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg></a>
+        <a href="https://github.com" target="_blank" class="footer-social" title="GitHub"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg></a>
+        <a href="https://youtube.com" target="_blank" class="footer-social" title="YouTube"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
+        <a href="https://instagram.com" target="_blank" class="footer-social" title="Instagram"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const canvas = document.getElementById('particle-canvas');
+const ctx = canvas.getContext('2d');
+let W, H, particles = [], mouse = {x: -9999, y: -9999};
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+class Particle {
+  constructor() { this.reset(); }
+  reset() { this.x = Math.random()*W; this.y = Math.random()*H; this.vx = (Math.random()-.5)*.4; this.vy = (Math.random()-.5)*.4; this.r = Math.random()*1.5+.3; this.alpha = Math.random()*.5+.1; this.color = Math.random()>.85?'#d4a017':'#444466'; }
+  update() { this.x+=this.vx; this.y+=this.vy; const dx=mouse.x-this.x,dy=mouse.y-this.y,dist=Math.sqrt(dx*dx+dy*dy); if(dist<120){this.x-=dx*.015;this.y-=dy*.015;} if(this.x<0||this.x>W||this.y<0||this.y>H)this.reset(); }
+  draw() { ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fillStyle=this.color; ctx.globalAlpha=this.alpha; ctx.fill(); }
+}
+for(let i=0;i<120;i++)particles.push(new Particle());
+function drawConnections(){for(let i=0;i<particles.length;i++){for(let j=i+1;j<particles.length;j++){const dx=particles[i].x-particles[j].x,dy=particles[i].y-particles[j].y,d=Math.sqrt(dx*dx+dy*dy);if(d<100){ctx.beginPath();ctx.moveTo(particles[i].x,particles[i].y);ctx.lineTo(particles[j].x,particles[j].y);ctx.strokeStyle='#d4a017';ctx.globalAlpha=(1-d/100)*.08;ctx.lineWidth=.5;ctx.stroke();}}}}
+function animate(){ctx.clearRect(0,0,W,H);ctx.globalAlpha=1;particles.forEach(p=>{p.update();p.draw();});drawConnections();ctx.globalAlpha=1;requestAnimationFrame(animate);}
+animate();
+const reveals = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver((entries)=>{entries.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('visible'),i*80);}});},{threshold:.1,rootMargin:'0px 0px -40px 0px'});
+reveals.forEach(el=>obs.observe(el));
+document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');});});
+document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{const target=document.querySelector(a.getAttribute('href'));if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});}});});
+window.addEventListener('scroll',()=>{const nav=document.querySelector('nav');nav.style.background=window.scrollY>50?'rgba(6,6,8,0.95)':'rgba(6,6,8,0.7)';});
+</script>
+</body>
+</html>
